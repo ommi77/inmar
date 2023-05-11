@@ -1,7 +1,9 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase, APIRequestFactory
+from rest_framework_simplejwt.tokens import AccessToken
 
 from metadata.models import Location, Department, Category, SubCategory, SKU
 from metadata.serializers import (
@@ -18,12 +20,16 @@ class LocationViewSetTestCase(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         # Create some test data
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.token = str(AccessToken().for_user(self.user))
+
         Location.objects.create(name="Location 1")
-        Location.objects.create(name="Location 2")
+
 
     def test_list_locations(self):
         url = reverse("location-list")
-        response = self.client.get(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+        response = self.client.get(url, **headers)
         self.assertEqual(response.status_code, 200)
 
         locations = Location.objects.all()
@@ -34,9 +40,9 @@ class LocationViewSetTestCase(TestCase):
 
     def test_retrieve_location(self):
         location = Location.objects.first()
-
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
         url = reverse("location-detail", kwargs={"pk": location.id})
-        response = self.client.get(url)
+        response = self.client.get(url, **headers)
 
         self.assertEqual(response.status_code, 200)
 
@@ -47,8 +53,10 @@ class LocationViewSetTestCase(TestCase):
 
     def test_create_location(self):
         url = reverse("location-list")
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
         data = {"name": "New Location"}
-        response = self.client.post(url, data)
+        response = self.client.post(url, **headers, data=data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -60,10 +68,11 @@ class LocationViewSetTestCase(TestCase):
 
     def test_update_location(self):
         location = Location.objects.first()
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
 
         url = reverse("location-detail", kwargs={"pk": location.pk})
         data = {"name": "Updated Location", "city": "Updated City"}
-        response = self.client.put(url, data)
+        response = self.client.put(url, **headers , data=data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -72,9 +81,10 @@ class LocationViewSetTestCase(TestCase):
 
     def test_destroy_location(self):
         location = Location.objects.first()
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
 
         url = reverse("location-detail", kwargs={"pk": location.pk})
-        response = self.client.delete(url)
+        response = self.client.delete(url, **headers)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Location.objects.filter(pk=location.pk).exists())
@@ -83,6 +93,8 @@ class LocationViewSetTestCase(TestCase):
 class DepartmentViewSetTestCase(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.token = str(AccessToken().for_user(self.user))
         self.location1 = Location.objects.create(name="Location 1")
         self.location2 = Location.objects.create(name="Location 2")
         self.department = Department.objects.create(
@@ -91,7 +103,9 @@ class DepartmentViewSetTestCase(TestCase):
 
     def test_list_departments(self):
         url = reverse("department-list", kwargs={"location_id": self.location1.id})
-        response = self.client.get(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+        response = self.client.get(url, **headers)
         departments = Department.objects.filter(location_id=self.location1.id)
         serializer = DepartmentSerializer(departments, many=True)
 
@@ -103,7 +117,9 @@ class DepartmentViewSetTestCase(TestCase):
             "department-detail",
             kwargs={"location_id": self.location1.id, "pk": self.department.id},
         )
-        response = self.client.get(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+        response = self.client.get(url, **headers)
         serializer = DepartmentSerializer(self.department)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -111,8 +127,10 @@ class DepartmentViewSetTestCase(TestCase):
 
     def test_create_department(self):
         url = reverse("department-list", kwargs={"location_id": self.location1.id})
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
         data = {"name": "New Department", "location": self.location1.id}
-        response = self.client.post(url, data)
+        response = self.client.post(url, **headers, data=data)
         department = Department.objects.latest("id")
         serializer = DepartmentSerializer(department)
 
@@ -124,8 +142,10 @@ class DepartmentViewSetTestCase(TestCase):
             "department-detail",
             kwargs={"location_id": self.location1.id, "pk": self.department.id},
         )
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
         data = {"name": "Updated Department", "location": self.location1.id}
-        response = self.client.put(url, data)
+        response = self.client.put(url, **headers, data=data)
         self.department.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -136,7 +156,9 @@ class DepartmentViewSetTestCase(TestCase):
             "department-detail",
             kwargs={"location_id": self.location1.id, "pk": self.department.id},
         )
-        response = self.client.delete(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+        response = self.client.delete(url, **headers)
         self.assertFalse(Department.objects.filter(id=self.department.id).exists())
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -146,6 +168,9 @@ class CategoryViewSetTestCase(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         # Create some test data
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.token = str(AccessToken().for_user(self.user))
+
         self.location = Location.objects.create(name="Location 1")
         self.department = Department.objects.create(
             name="Department 1", location=self.location
@@ -168,7 +193,9 @@ class CategoryViewSetTestCase(TestCase):
                 "department_id": self.department.id,
             },
         )
-        response = self.client.get(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+        response = self.client.get(url, **headers)
         self.assertEqual(response.status_code, 200)
 
         categories = Category.objects.filter(department=self.department)
@@ -186,7 +213,9 @@ class CategoryViewSetTestCase(TestCase):
                 "pk": self.category1.id,
             },
         )
-        response = self.client.get(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+        response = self.client.get(url, **headers)
         self.assertEqual(response.status_code, 200)
 
         serializer = CategorySerializer(self.category1)
@@ -202,11 +231,13 @@ class CategoryViewSetTestCase(TestCase):
                 "department_id": self.department.id,
             },
         )
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
         data = {
             "name": "New Category",
             "department": self.department.id,
         }
-        response = self.client.post(url, data)
+        response = self.client.post(url, **headers, data=data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         category = Category.objects.get(name="New Category")
@@ -224,8 +255,10 @@ class CategoryViewSetTestCase(TestCase):
                 "pk": self.category1.id,
             },
         )
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
         data = {"name": "Updated Category", "department": self.department.id}
-        response = self.client.put(url, data)
+        response = self.client.put(url, **headers, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.category1.refresh_from_db()
@@ -240,7 +273,8 @@ class CategoryViewSetTestCase(TestCase):
                 "pk": self.category1.id,
             },
         )
-        response = self.client.delete(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+        response = self.client.delete(url, **headers)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Category.objects.filter(pk=self.category1.id).exists())
 
@@ -249,6 +283,9 @@ class SubCategoryViewSetTestCase(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         # Create test data: location, department, category, subcategory
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.token = str(AccessToken().for_user(self.user))
+
         self.location = Location.objects.create(name="Location 1")
         self.department = Department.objects.create(
             name="Department 1", location=self.location
@@ -269,7 +306,9 @@ class SubCategoryViewSetTestCase(TestCase):
                 "category_id": self.category.id,
             },
         )
-        response = self.client.get(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+        response = self.client.get(url, **headers)
         self.assertEqual(response.status_code, 200)
 
         subcategories = SubCategory.objects.filter(
@@ -292,7 +331,9 @@ class SubCategoryViewSetTestCase(TestCase):
                 "pk": self.subcategory.id,
             },
         )
-        response = self.client.get(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+        response = self.client.get(url, **headers)
 
         self.assertEqual(response.status_code, 200)
 
@@ -310,8 +351,10 @@ class SubCategoryViewSetTestCase(TestCase):
                 "category_id": self.category.id,
             },
         )
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
         data = {"name": "New Subcategory", "category": self.category.id}
-        response = self.client.post(url, data)
+        response = self.client.post(url, **headers, data=data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -332,7 +375,8 @@ class SubCategoryViewSetTestCase(TestCase):
             },
         )
         data = {"name": "Updated Subcategory", "category": self.category.id}
-        response = self.client.put(url, data)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+        response = self.client.put(url, **headers, data=data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -349,7 +393,8 @@ class SubCategoryViewSetTestCase(TestCase):
                 "pk": self.subcategory.id,
             },
         )
-        response = self.client.delete(url)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+        response = self.client.delete(url, **headers)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(SubCategory.objects.filter(pk=self.subcategory.id).exists())
@@ -358,6 +403,8 @@ class SubCategoryViewSetTestCase(TestCase):
 class SKUViewSetTestCase(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.token = str(AccessToken().for_user(self.user))
         self.view = SKUViewSet.as_view({"get": "list"})
         self.url = reverse("sku-detail")
 
@@ -378,6 +425,7 @@ class SKUViewSetTestCase(APITestCase):
     def test_list_skus_with_metadata(self):
         metadata = "Location 1,Department 1,Category 1,Subcategory 1"
         request = self.factory.get(self.url, {"metadata": metadata})
+        request.META["HTTP_AUTHORIZATION"] = f"Bearer {self.token}"
         response = self.view(request)
         self.assertEqual(response.status_code, 200)
 
@@ -393,6 +441,7 @@ class SKUViewSetTestCase(APITestCase):
     def test_list_skus_with_invalid_metadata(self):
         metadata = "Invalid Metadata Format"
         request = self.factory.get(self.url, {"metadata": metadata})
+        request.META["HTTP_AUTHORIZATION"] = f"Bearer {self.token}"
         response = self.view(request)
         self.assertEqual(response.status_code, 400)
 
@@ -403,6 +452,7 @@ class SKUViewSetTestCase(APITestCase):
 
     def test_list_skus_without_metadata(self):
         request = self.factory.get(self.url)
+        request.META["HTTP_AUTHORIZATION"] = f"Bearer {self.token}"
         response = self.view(request)
         self.assertEqual(response.status_code, 200)
 
