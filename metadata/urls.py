@@ -23,7 +23,7 @@ urlpatterns = [
         ),
         name="location-detail",
     ),
-    #Department
+    # Department
     path(
         "location/<int:location_id>/department/",
         DepartmentViewSet.as_view({"get": "list", "post": "create"}),
@@ -36,7 +36,7 @@ urlpatterns = [
         ),
         name="department-detail",
     ),
-    #Category
+    # Category
     path(
         "location/<int:location_id>/department/<int:department_id>/category/",
         CategoryViewSet.as_view({"get": "list", "post": "create"}),
@@ -49,7 +49,7 @@ urlpatterns = [
         ),
         name="category-detail",
     ),
-    #SubCategory
+    # SubCategory
     path(
         "location/<int:location_id>/department/<int:department_id>/category/<int:category_id>/subcategory/",
         SubCategoryViewSet.as_view({"get": "list", "post": "create"}),
