@@ -1,4 +1,5 @@
 from django.test import TestCase
+
 from metadata.models import Location, Department, Category, SubCategory, SKU
 
 
