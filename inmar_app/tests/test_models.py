@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from metadata.models import Location, Department, Category, SubCategory, SKU
+from inmar_app.models import Location, Department, Category, SubCategory, SKU
 
 
 class LocationModelTestCase(TestCase):

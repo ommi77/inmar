@@ -5,29 +5,23 @@ from .models import Location, Department, Category, SubCategory, SKU
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Location
+        db_table =Location
         fields = "__all__"
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Department
+        db_table = Department
         fields = "__all__"
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Category
+        db_table = Category
         fields = "__all__"
 
 
 class SubCategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = SubCategory
-        fields = "__all__"
-
-
-class SKUSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SKU
+        db_table = SubCategory
         fields = "__all__"

@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class MetadataConfig(AppConfig):
+class inmar_appConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "metadata"
+    name = "inmar_app"

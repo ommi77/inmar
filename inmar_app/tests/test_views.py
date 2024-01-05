@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase, APIRequestFactory
 from rest_framework_simplejwt.tokens import AccessToken
 
-from metadata.models import Location, Department, Category, SubCategory, SKU
-from metadata.serializers import (
+from inmar_app.models import Location, Department, Category, SubCategory, SKU
+from inmar_app.serializers import (
     LocationSerializer,
     DepartmentSerializer,
     CategorySerializer,
@@ -431,9 +431,9 @@ class SKUViewSetTestCase(APITestCase):
             subcategory="Subcategory 2",
         )
 
-    def test_list_skus_with_metadata(self):
-        metadata = "Location 1,Department 1,Category 1,Subcategory 1"
-        request = self.factory.get(self.url, {"metadata": metadata})
+    def test_list_skus_with_inmar_app(self):
+        inmar_app = "Location 1,Department 1,Category 1,Subcategory 1"
+        request = self.factory.get(self.url, {"inmar_app": inmar_app})
         request.META["HTTP_AUTHORIZATION"] = f"Bearer {self.token}"
         response = self.view(request)
         self.assertEqual(response.status_code, 200)
@@ -447,9 +447,9 @@ class SKUViewSetTestCase(APITestCase):
         serializer = SKUSerializer(expected_data, many=True)
         self.assertEqual(response.data, serializer.data)
 
-    def test_list_skus_with_invalid_metadata(self):
-        metadata = "Invalid Metadata Format"
-        request = self.factory.get(self.url, {"metadata": metadata})
+    def test_list_skus_with_invalid_inmar_app(self):
+        inmar_app = "Invalid inmar_app Format"
+        request = self.factory.get(self.url, {"inmar_app": inmar_app})
         request.META["HTTP_AUTHORIZATION"] = f"Bearer {self.token}"
         response = self.view(request)
         self.assertEqual(response.status_code, 400)
@@ -459,7 +459,7 @@ class SKUViewSetTestCase(APITestCase):
         }
         self.assertEqual(response.data, expected_error)
 
-    def test_list_skus_without_metadata(self):
+    def test_list_skus_without_inmar_app(self):
         request = self.factory.get(self.url)
         request.META["HTTP_AUTHORIZATION"] = f"Bearer {self.token}"
         response = self.view(request)

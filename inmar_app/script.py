@@ -1,6 +1,6 @@
-# from metadata.models import Location, Department, Category, SubCategory, SKU
+# from inmar_app.models import Location, Department, Category, SubCategory, SKU
 #
-# # metadata_string = """Perimeter,Bakery,Bakery Bread,Bagels
+# # inmar_app_string = """Perimeter,Bakery,Bakery Bread,Bagels
 # # Perimeter,Bakery,Bakery Bread,Baking or Breading Products
 # # Perimeter,Bakery,Bakery Bread,English Muffins or Biscuits
 # # Perimeter,Bakery,Bakery Bread,Flatbreads
@@ -49,8 +49,8 @@
 # #
 # #
 # # def a():
-# #     metadata_list = [line.split(",") for line in metadata_string.split("\n")]
-# #     for each in metadata_list:
+# #     inmar_app_list = [line.split(",") for line in inmar_app_string.split("\n")]
+# #     for each in inmar_app_list:
 # #         print(each)
 # #         lo, created = Location.objects.get_or_create(name=each[0])
 # #         do, created = Department.objects.get_or_create(name=each[1], location=lo)
